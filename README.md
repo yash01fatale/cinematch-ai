@@ -18,7 +18,7 @@ Discover movies using Natural Language Processing, TF-IDF vectorisation, and cos
 
 ## 🚀 Live Demo
 
-https://your-app-name.streamlit.app
+https://cinematch-ai-yash.streamlit.app
 ---
 
 # 📌 About The Project
