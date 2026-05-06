@@ -21,7 +21,7 @@
 ║  model.py        → Recommendation logic + TMDB API calls                    ║
 ║  build_model.py  → One-time script: builds TF-IDF matrix → .pkl files      ║
 ║  dataset/        → tmdb_5000_movies.csv + tmdb_5000_credits.csv             ║
-║  model_data/     → Auto-created by build_model.py (movies.pkl etc.)         ║
+║  model_data/     → Auto-created by build_model.py (model_data/movies.pkl etc.)         ║
 ║  .env            → Your secret TMDB_API_KEY goes here (never commit!)       ║
 ║                                                                             ║
 ║  WHAT TO CUSTOMISE                                                          ║

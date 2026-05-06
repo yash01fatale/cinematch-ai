@@ -32,8 +32,8 @@ def _find_file(filename: str) -> str:
 
 
 try:
-    movies = pickle.load(open(_find_file("movies.pkl"), "rb"))
-    similarity = pickle.load(open(_find_file("similarity.pkl"), "rb"))
+    movies = pickle.load(open(_find_file("model_data/movies.pkl"), "rb"))
+    similarity = pickle.load(open(_find_file("model_data/similarity.pkl"), "rb"))
 
 except FileNotFoundError:
 
@@ -43,8 +43,8 @@ except FileNotFoundError:
 
     subprocess.run([sys.executable, "build_model.py"], check=True)
     
-    movies = pickle.load(open(_find_file("movies.pkl"), "rb"))
-    similarity = pickle.load(open(_find_file("similarity.pkl"), "rb"))
+    movies = pickle.load(open(_find_file("model_data/movies.pkl"), "rb"))
+    similarity = pickle.load(open(_find_file("model_data/similarity.pkl"), "rb"))
 # Normalised title lookup for fast matching
 _title_lower = movies["title"].str.lower()
 
