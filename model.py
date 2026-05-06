@@ -41,7 +41,7 @@ except FileNotFoundError:
 
     import subprocess
 
-    subprocess.run(["python", "build_model.py"], check=True)
+    subprocess.run(["sys.executable", "build_model.py"], check=True)
 
     movies = pickle.load(open(_find_file("movies.pkl"), "rb"))
     similarity = pickle.load(open(_find_file("similarity.pkl"), "rb"))
