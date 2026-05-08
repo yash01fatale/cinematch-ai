@@ -81,6 +81,9 @@ def load_trending() -> list[dict]:
 
 
 all_titles = load_titles()
+# Store last selected movie
+if "last_movie" not in st.session_state:
+    st.session_state.last_movie = "None"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -895,12 +898,11 @@ st.markdown("""
 _, col_center, _ = st.columns([0.5, 4, 0.5])
 with col_center:
     selected_movie = st.selectbox(
-        "Pick a movie",
-        options=all_titles,
-        index=all_titles.index("The Dark Knight") if "The Dark Knight" in all_titles else 0,
-        label_visibility="collapsed",
-        placeholder="🔍  Search or scroll 4,803 movies …",
-    )
+    "🔍 Search Your Favourite Movie",
+    options=all_titles,
+    index=None,
+    placeholder="Type movie name...",
+)
 
 st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
 
@@ -939,6 +941,7 @@ st.markdown("""
 if recommend_clicked:
     with st.spinner("Analysing cinematic DNA …"):
         results = recommend(selected_movie, n=top_n)
+        st.session_state.last_movie = selected_movie
 
     if not results:
         st.warning(
