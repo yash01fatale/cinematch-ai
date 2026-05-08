@@ -39,7 +39,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 import streamlit as st
 import pandas as pd
-from model import recommend, fetch_movie_meta, get_trending
+from model import recommend, fetch_movie_meta, get_trending,fetch_trailer 
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -482,6 +482,7 @@ def render_card(movie: dict, show_score: bool = False) -> str:
 </div>"""
 
 def render_grid(movies_list: list[dict], cols: int = 5, show_score: bool = False):
+
     """
     Responsive dynamic movie grid renderer.
     """
@@ -499,10 +500,44 @@ def render_grid(movies_list: list[dict], cols: int = 5, show_score: bool = False
         for col, movie in zip(columns, row_movies):
 
             with col:
+
+                # Movie Card
                 st.markdown(
                     render_card(movie, show_score),
                     unsafe_allow_html=True
                 )
+
+                # Movie Details + Trailer
+                with st.expander("🎬 Watch Trailer"):
+
+                    st.write(
+                        movie.get(
+                            "overview",
+                            "No overview available."
+                        )
+                    )
+
+                    st.markdown(f"""
+                    ⭐ Rating: {movie.get('rating', 'N/A')}
+
+                    📅 Year: {movie.get('year', 'N/A')}
+                    """)
+
+                    # Fetch Trailer
+                    trailer_url = fetch_trailer(movie["title"])
+
+                    if trailer_url:
+
+                        st.video(trailer_url)
+
+                        st.link_button(
+                            "▶ Watch on YouTube",
+                            trailer_url,
+                            width="stretch"
+                        )
+
+                    else:
+                        st.info("Trailer not available.")
 
 def _initials(name: str) -> str:
     """'Yash Yuvraj Fatale' → 'YF'"""
@@ -577,7 +612,10 @@ with ctrl_l:
     top_n = st.slider("Recommendations", min_value=5, max_value=15, value=10, step=5)
 with ctrl_m:
     st.markdown("<div style='padding-top:1.6rem'></div>", unsafe_allow_html=True)
-    recommend_clicked = st.button("✦  Get Recommendations", use_container_width=True)
+    recommend_clicked = st.button(
+    "✦  Get Recommendations",
+    width="stretch"
+)
 # ctrl_r intentionally empty — keeps button visually centred
 
 

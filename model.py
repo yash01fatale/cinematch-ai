@@ -32,8 +32,8 @@ def _find_file(filename: str) -> str:
 
 
 try:
-    movies = pickle.load(open(_find_file("model_data/movies.pkl"), "rb"))
-    similarity = pickle.load(open(_find_file("model_data/similarity.pkl"), "rb"))
+    movies = pickle.load(open(_find_file("movies.pkl"), "rb"))
+    similarity = pickle.load(open(_find_file("similarity.pkl"), "rb"))
 
 except FileNotFoundError:
 
@@ -43,8 +43,8 @@ except FileNotFoundError:
 
     subprocess.run([sys.executable, "build_model.py"], check=True)
     
-    movies = pickle.load(open(_find_file("model_data/movies.pkl"), "rb"))
-    similarity = pickle.load(open(_find_file("model_data/similarity.pkl"), "rb"))
+    movies = pickle.load(open(_find_file("movies.pkl"), "rb"))
+    similarity = pickle.load(open(_find_file("similarity.pkl"), "rb"))
 # Normalised title lookup for fast matching
 _title_lower = movies["title"].str.lower()
 
@@ -79,21 +79,93 @@ def fetch_poster(movie_title: str) -> str:
     return ""
 
 
-def fetch_movie_meta(movie_title: str) -> dict:
-    """Return a dict with poster, year, rating, overview."""
-    result = _tmdb_search(movie_title) or {}
-    poster = (_IMG_BASE + result["poster_path"]) if result.get("poster_path") else ""
-    year   = (result.get("release_date") or "")[:4]
-    rating = round(result.get("vote_average", 0), 1)
-    overview = result.get("overview", "")
+def fetch_movie_meta(movie_title: str):
+
+    result = _tmdb_search(movie_title)
+
+    if not result:
+
+        return {
+            "poster": "",
+            "year": "N/A",
+            "rating": "N/A",
+            "overview": "No overview available."
+        }
+
+    poster = ""
+
+    if result.get("poster_path"):
+        poster = _IMG_BASE + result["poster_path"]
+
+    year = "N/A"
+
+    if result.get("release_date"):
+        year = result["release_date"][:4]
+
+    rating = result.get("vote_average", 0)
+
+    overview = result.get(
+        "overview",
+        "No overview available."
+    )
+
     return {
-        "poster":   poster,
-        "year":     year,
-        "rating":   rating,
+        "poster": poster,
+        "year": year,
+        "rating": round(float(rating), 1),
         "overview": overview,
     }
 
+def fetch_trailer(movie_title: str):
 
+    result = _tmdb_search(movie_title)
+
+    if not result:
+        return ""
+
+    movie_id = result.get("id")
+
+    if not movie_id:
+        return ""
+
+    try:
+
+        response = requests.get(
+            f"{_BASE}/movie/{movie_id}/videos",
+            params={
+                "api_key": API_KEY,
+                "language": "en-US"
+            },
+            timeout=10,
+        )
+
+        data = response.json()
+
+        videos = data.get("results", [])
+
+        # Official trailers first
+        for video in videos:
+
+            if (
+                video.get("site") == "YouTube"
+                and video.get("type") == "Trailer"
+                and video.get("official") is True
+            ):
+
+                return f"https://www.youtube.com/watch?v={video['key']}"
+
+        # Fallback videos
+        for video in videos:
+
+            if video.get("site") == "YouTube":
+
+                return f"https://www.youtube.com/watch?v={video['key']}"
+
+    except Exception as e:
+
+        print("Trailer Error:", e)
+
+    return ""
 # ─── Recommendation Engine ────────────────────────────────────────────────────
 def recommend(movie_title: str, n: int = 10) -> list[dict]:
     """
