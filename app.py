@@ -481,22 +481,28 @@ def render_card(movie: dict, show_score: bool = False) -> str:
   </div>
 </div>"""
 
-
 def render_grid(movies_list: list[dict], cols: int = 5, show_score: bool = False):
     """
-    Lays out a row-based grid of movie cards.
-
-    Args:
-        movies_list : output of recommend() or load_trending()
-        cols        : cards per row (5 fits nicely on wide layout)
-        show_score  : pass True only for the AI recommendations section
+    Responsive dynamic movie grid renderer.
     """
-    for i in range(0, len(movies_list), cols):
-        row = movies_list[i: i + cols]
-        for col, movie in zip(st.columns(cols, gap="small"), row):
-            with col:
-                st.markdown(render_card(movie, show_score), unsafe_allow_html=True)
 
+    if not movies_list:
+        st.warning("No movies found.")
+        return
+
+    for i in range(0, len(movies_list), cols):
+
+        row_movies = movies_list[i:i + cols]
+
+        columns = st.columns(len(row_movies), gap="medium")
+
+        for col, movie in zip(columns, row_movies):
+
+            with col:
+                st.markdown(
+                    render_card(movie, show_score),
+                    unsafe_allow_html=True
+                )
 
 def _initials(name: str) -> str:
     """'Yash Yuvraj Fatale' → 'YF'"""
@@ -614,8 +620,13 @@ if recommend_clicked:
         </div>
         """, unsafe_allow_html=True)
 
-        render_grid(results, cols=5, show_score=True)
+        grid_cols = 5 if top_n >= 10 else top_n
 
+        render_grid(
+            results,
+            cols=grid_cols,
+            show_score=True
+        )
         # Explainer note — helps non-technical users understand the score
         st.markdown("""
         <p style="font-size:0.72rem;color:#2a2520;text-align:right;
