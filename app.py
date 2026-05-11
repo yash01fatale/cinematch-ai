@@ -31,7 +31,8 @@
 # ══════════════════════════════════════════════════════════════════════════════
 import streamlit as st
 import pandas as pd
-from model import recommend, fetch_movie_meta, get_trending, fetch_trailer
+import urllib
+from model import recommend, fetch_movie_meta, get_trending, fetch_trailer,get_now_playing_movies,fetch_watch_providers
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -811,6 +812,13 @@ def render_grid(movies_list: list[dict], cols: int = 5, show_score: bool = False
                     st.markdown(f"""
 ⭐ **Rating:** {movie.get('rating', 'N/A')} &nbsp;·&nbsp; 📅 **Year:** {movie.get('year', 'N/A')}
 """)
+                    providers = fetch_watch_providers(movie["title"])
+
+                    if providers:
+
+                        st.markdown("### 📺 Available On")
+
+                        st.write(" • ".join(providers))
                     trailer_url = fetch_trailer(movie["title"])
                     if trailer_url:
                         st.video(trailer_url)
@@ -818,7 +826,21 @@ def render_grid(movies_list: list[dict], cols: int = 5, show_score: bool = False
                     else:
                         st.info("Trailer not available.")
 
+                movie_query = urllib.parse.quote(movie["title"])
 
+                bookmyshow_url = (
+                    f"https://in.bookmyshow.com/explore/movies?search={movie_query}"
+                )
+
+                st.link_button(
+                    "🎟 Book Tickets",
+                    bookmyshow_url,
+                    width="stretch"
+                )
+
+if "watch_history" not in st.session_state:
+
+    st.session_state.watch_history = []
 # ══════════════════════════════════════════════════════════════════════════════
 # ① TOP NAVIGATION BAR
 # ══════════════════════════════════════════════════════════════════════════════
@@ -890,6 +912,21 @@ st.markdown("""
 # ══════════════════════════════════════════════════════════════════════════════
 # ③ SEARCH CARD — selectbox + slider + button
 # ══════════════════════════════════════════════════════════════════════════════
+if st.session_state.watch_history:
+
+    st.markdown("### 🕒 Recently Viewed")
+
+    cols = st.columns(len(st.session_state.watch_history))
+
+    for col, movie_name in zip(
+        cols,
+        st.session_state.watch_history
+    ):
+
+        with col:
+
+            st.button(movie_name)
+            
 st.markdown("""
 <div class="search-card">
   <div class="search-label">✦ &nbsp;Find films like yours</div>
@@ -942,6 +979,16 @@ if recommend_clicked:
     with st.spinner("Analysing cinematic DNA …"):
         results = recommend(selected_movie, n=top_n)
         st.session_state.last_movie = selected_movie
+        if selected_movie not in st.session_state.watch_history:
+
+            st.session_state.watch_history.insert(
+                0,
+                selected_movie
+            )
+
+            st.session_state.watch_history = (
+                st.session_state.watch_history[:5]
+            )
 
     if not results:
         st.warning(
@@ -980,6 +1027,17 @@ with st.spinner("Loading trending films …"):
     trending = load_trending()
 
 render_grid(trending, cols=5)
+
+st.markdown("""
+<div class="section-head">
+  <h2>🎬 Now Playing in Theatres</h2>
+  <span class="section-tag">Live Releases</span>
+</div>
+""", unsafe_allow_html=True)
+
+live_movies = get_now_playing_movies()
+
+render_grid(live_movies, cols=5)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

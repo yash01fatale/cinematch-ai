@@ -204,3 +204,67 @@ def get_trending(n: int = 10) -> list[str]:
         return movies.sort_values("popularity_score", ascending=False).head(n)["title"].tolist()
     # Fallback: first n rows (already sorted by TMDB popularity in the CSV)
     return movies.head(n)["title"].tolist()
+
+def get_now_playing_movies():
+
+    try:
+
+        response = requests.get(
+            f"{_BASE}/movie/now_playing",
+            params={"api_key": API_KEY},
+            timeout=10,
+        )
+
+        data = response.json()
+
+        movies = []
+
+        for movie in data.get("results", [])[:10]:
+
+            movies.append({
+                "title": movie.get("title"),
+                "poster": _IMG_BASE + movie["poster_path"]
+                if movie.get("poster_path")
+                else "",
+                "rating": movie.get("vote_average", 0),
+                "year": movie.get("release_date", "")[:4],
+                "overview": movie.get("overview", ""),
+            })
+
+        return movies
+
+    except Exception as e:
+
+        print("Now Playing Error:", e)
+
+        return []
+    
+def fetch_watch_providers(movie_title: str):
+
+    result = _tmdb_search(movie_title)
+
+    if not result:
+        return []
+
+    movie_id = result.get("id")
+
+    try:
+
+        response = requests.get(
+            f"{_BASE}/movie/{movie_id}/watch/providers",
+            params={"api_key": API_KEY},
+            timeout=10,
+        )
+
+        data = response.json()
+
+        providers = (
+            data.get("results", {})
+            .get("IN", {})
+            .get("flatrate", [])
+        )
+
+        return [p["provider_name"] for p in providers]
+
+    except Exception:
+        return []
